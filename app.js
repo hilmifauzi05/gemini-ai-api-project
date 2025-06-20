@@ -3,6 +3,7 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const dotenv = require('dotenv');
+const cors = require('cors');
 
 dotenv.config();
 const upload = multer({ dest: 'uploads/' });
@@ -14,14 +15,19 @@ const model = genAI.getGenerativeModel({
         temperature: 0.5
     }
 })
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8000;
 const app = express();
 app.use(express.json());
+app.use(cors());
+app.use(express.static('public'));
 
 app.post('/generate-text', async (req, res) => {
-    const { prompt } = req.body;
+    const { message } = req.body;
+    if (!message) {
+        res.status(400).json({ error: 'Prompt is required' })
+    }
     try {
-        const result = await model.generateContent(prompt);
+        const result = await model.generateContent(message);
         const { response } = result;
         res.json({ output: response.text() });
     } catch (error) {
